@@ -1,0 +1,44 @@
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+*.nuget.props
+*.nuget.targets
+*.user
+*.suo
+*.userprefs
+*.lock.json
+*.vspscc
+*.vssscc
+.vs/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# Visual Studio cache files
+# files ending in .cache can be ignored
+*.[Cc]ache
+# but keep track of directories ending in .cache
+!*.[Cc]ache/
+
+# Others
+ClientApp/node_modules/
+node_modules/
+wwwroot/
+*.dbmdl
+*.dbproj.schemaview
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Including a line for appsettings.json in case it's not filtered elsewhere
+appsettings.json
