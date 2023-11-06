@@ -13,9 +13,9 @@ namespace ECommerceApp.Services
 {
     public class TokenObject
     {
-        public string ? DecodedToken { get; set; }
-        public string ? DecodedTokenAudience { get; set; }
-    } 
+        public string? DecodedToken { get; set; }
+        public string? DecodedTokenAudience { get; set; }
+    }
     public class TokenService
     {
         private readonly IConfiguration _configuration;
@@ -30,9 +30,7 @@ namespace ECommerceApp.Services
 
         public string GenerateToken(string email)
         {
-            var JwtKey = _configuration["Jwt:Key"];
-            if (JwtKey == null)
-                return "";
+            var JwtKey = _configuration["Jwt:Key"] ?? throw new IsNullException();
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(JwtKey);
@@ -54,10 +52,33 @@ namespace ECommerceApp.Services
             return tokenString;
         }
 
+        public string GenerateSellerToken(string email, string role)
+        {
+            var JwtKey = _configuration["Jwt:Key"] ?? throw new IsNullException();
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(JwtKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(
+                    new Claim[] {
+                        new(ClaimTypes.Email, email), //or new Claim(ClaimType.Email, email)
+                        new(ClaimTypes.Role, role)
+                    }),
+                Expires = DateTime.UtcNow.AddHours(24),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature, SecurityAlgorithms.Sha256Digest),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+            return tokenString;
+
+        }
+
         public TokenObject GetUserFromToken(string token)
         {
             var JwtKey = _configuration["Jwt:Issuer"] ?? throw new IsNullException();
-            
+
             var decodedToken = new JwtSecurityToken(jwtEncodedString: token)
                 .Payload
                 .First(x => x.Key == "email")
@@ -72,8 +93,9 @@ namespace ECommerceApp.Services
 
             var logger = _loggerFactory.CreateLogger<TokenService>();
             logger?.LogInformation("Decoded token", decodedTokenAudience);
-            
-            return new TokenObject(){
+
+            return new TokenObject()
+            {
                 DecodedToken = decodedToken,
                 DecodedTokenAudience = decodedTokenAudience
             };

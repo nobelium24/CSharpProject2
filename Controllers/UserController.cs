@@ -81,7 +81,15 @@ namespace ECommerceApp.Controllers
                 if (passwordVerificationResult == PasswordVerificationResult.Failed)
                     return BadRequest(new { message = "Invalid email or password" });
 
-                var token = _tokenService.GenerateToken(user.Email);
+                var token = "";
+                if (user.IsSeller)
+                {
+                    token = _tokenService.GenerateSellerToken(user.Email, "Seller");
+                }
+                else 
+                {
+                    token = _tokenService.GenerateToken(user.Email);
+                }
 
                 if (token == "")
                     throw new AuthorizationException();
@@ -112,10 +120,10 @@ namespace ECommerceApp.Controllers
             //     return Unauthorized(exception.Message);
             // }
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
-            if(string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email))
                 return Unauthorized("No email claims found in token");
 
-            return Ok(email); 
+            return Ok(email);
         }
     }
 
