@@ -172,6 +172,8 @@ namespace ECommerceApp.Controllers
 
                 await _dbContext.SaveChangesAsync();
 
+                _dbContext.ForgotPassword.Remove(verifyUser);
+
                 return Json(new { message = "Password has been reset successfully." });
             }
             catch (System.Exception)
