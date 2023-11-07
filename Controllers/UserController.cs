@@ -2,6 +2,7 @@ using ECommerceApp.Database;
 using ECommerceApp.Errors;
 using ECommerceApp.Models;
 using ECommerceApp.Services;
+using ECommerceApp.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -21,11 +22,14 @@ namespace ECommerceApp.Controllers
         private readonly TokenService _tokenService;
 
         private readonly SendMail _sendMail;
-        public UserController(ApplicationDBContext dbContext, TokenService tokenService, SendMail sendMail)
+
+        private readonly CodeGenerator _codeGenerator;
+        public UserController(ApplicationDBContext dbContext, TokenService tokenService, SendMail sendMail, CodeGenerator codeGenerator)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext)); // This is a null check.
             _tokenService = tokenService;
             _sendMail = sendMail;
+            _codeGenerator = codeGenerator;
         }
 
         [HttpPost]
@@ -86,7 +90,7 @@ namespace ECommerceApp.Controllers
                 {
                     token = _tokenService.GenerateSellerToken(user.Email, "Seller");
                 }
-                else 
+                else
                 {
                     token = _tokenService.GenerateToken(user.Email);
                 }
@@ -124,6 +128,56 @@ namespace ECommerceApp.Controllers
                 return Unauthorized("No email claims found in token");
 
             return Ok(email);
+        }
+
+        [HttpPost]
+        [Route("/api/user/forgotpassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] string email)
+        {
+            try
+            {
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+                string code = _codeGenerator.VerificationCode(4);
+                var forgottenPassword = new ForgotPasswordModel()
+                {
+                    Email = email,
+                    VerificationCode = code
+                };
+                _dbContext.ForgotPassword.Add(forgottenPassword);
+                await _dbContext.SaveChangesAsync();
+                var firstName = user.FirstName ?? throw new IsNullException();
+
+                _sendMail.SendForgotPasswordMail(email, firstName, code);
+                return Json(new { message = "Check your mail for verification code" });
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("/api/user/resetpassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ForgotPasswordModel resetPassword)
+        {
+            try
+            {
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == resetPassword.Email) ?? throw new UserNotFoundException();
+                var verifyUser = await _dbContext.ForgotPassword.FirstOrDefaultAsync(u => u.VerificationCode == resetPassword.VerificationCode) ?? throw new InvalidResetPasswordCodeException();
+
+                var newPassword = resetPassword.NewPassword ?? throw new IsNullException();
+                var hashNewPassword = new PasswordHasher<UserModel>().HashPassword(user, resetPassword.NewPassword);
+
+                user.Password = hashNewPassword;
+
+                await _dbContext.SaveChangesAsync();
+
+                return Json(new { message = "Password has been reset successfully." });
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
         }
     }
 

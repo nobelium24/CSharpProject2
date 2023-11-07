@@ -29,4 +29,9 @@ namespace ECommerceApp.Errors
     {
         public IsNullException() : base("Variable is null"){}
     }
+
+    public class InvalidResetPasswordCodeException : Exception
+    {
+        public InvalidResetPasswordCodeException() : base("Password reset code is invalid"){}
+    }
 }

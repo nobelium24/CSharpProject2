@@ -9,14 +9,15 @@ namespace ECommerceApp.Database
         public DbSet<Models.CategoryModel> Categories { get; set; }
         public DbSet<Models.ProductModel> Products { get; set; }
         public DbSet<Models.CartModel> Carts { get; set; }
+        public DbSet<Models.ForgotPasswordModel> ForgotPassword { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Models.UserModel>()
-                .HasAlternateKey(a => new {a.Email});
+                .HasAlternateKey(a => new { a.Email });
 
             modelBuilder.Entity<Models.CategoryModel>()
-                .HasAlternateKey(a => new {a.CategoryName});
+                .HasAlternateKey(a => new { a.CategoryName });
 
             modelBuilder.Entity<Models.ProductModel>()
                 .HasOne(p => p.Category)

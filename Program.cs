@@ -6,6 +6,7 @@ using System.Text;
 using ECommerceApp.Services;
 using System.IdentityModel.Tokens.Jwt;
 using ECommerceApp.Errors;
+using ECommerceApp.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +66,8 @@ builder.Services.AddScoped<ErrorHandlerMiddleware>();
 
 //Register the mailer service 
 builder.Services.AddScoped<SendMail>();
+
+builder.Services.AddScoped<CodeGenerator>();
 
 
 var app = builder.Build();

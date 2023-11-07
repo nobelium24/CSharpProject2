@@ -54,5 +54,28 @@ namespace ECommerceApp.Services
             client.Send(email);
             client.Disconnect(true);
         }
+
+        public void SendForgotPasswordMail(string recipientMail, string recipient, string code)
+        {
+            string subject = "ForgotPasswordMail";
+            string body = $"Dear {recipientMail}, \nKindly use the code {code} to reset your password.";
+            var fromAddress = new MailboxAddress("Adewole", _configuration["Mailer:Email"]);
+            var toAddress = new MailboxAddress(recipient, recipientMail);
+            string fromPassword = _configuration["Mailer:Password"] ?? throw new IsNullException();
+            const string smtpServer = "smtp.gmail.com";
+            const int smtpPort = 587;
+
+            var email = new MimeMessage();
+            email.From.Add(fromAddress);
+            email.To.Add(toAddress);
+            email.Subject = subject;
+            email.Body = new TextPart("plain") {Text = body};
+
+            using var client = new MailKit.Net.Smtp.SmtpClient();
+            client.Connect(smtpServer, smtpPort);
+            client.Authenticate(fromAddress.Address, fromPassword);
+            client.Send(email);
+            client.Disconnect(true);
+        }
     }
 }
