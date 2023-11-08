@@ -75,6 +75,29 @@ namespace ECommerceApp.Services
 
         }
 
+        public string GenerateAdminToken(string email, string role)
+        {
+            var JwtKey = _configuration["Jwt:Key"] ?? throw new IsNullException();
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(JwtKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(
+                    new Claim[]{
+                        new(ClaimTypes.Email, email),
+                        new(ClaimTypes.Role, role)
+                    }
+                ),
+                Expires = DateTime.UtcNow.AddHours(24),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature, SecurityAlgorithms.Sha256Digest),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+            return tokenString;
+        }
+
         public TokenObject GetUserFromToken(string token)
         {
             var JwtKey = _configuration["Jwt:Issuer"] ?? throw new IsNullException();

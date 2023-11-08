@@ -10,6 +10,7 @@ namespace ECommerceApp.Database
         public DbSet<Models.ProductModel> Products { get; set; }
         public DbSet<Models.CartModel> Carts { get; set; }
         public DbSet<Models.ForgotPasswordModel> ForgotPassword { get; set; }
+        public DbSet<Models.AdminModel> Admin { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -18,6 +19,12 @@ namespace ECommerceApp.Database
 
             modelBuilder.Entity<Models.CategoryModel>()
                 .HasAlternateKey(a => new { a.CategoryName });
+
+            modelBuilder.Entity<Models.AdminModel>()
+                .HasAlternateKey(a => new { a.Email });
+
+            modelBuilder.Entity<Models.AdminModel>()
+                .HasAlternateKey(a => new { a.UserName });
 
             modelBuilder.Entity<Models.ProductModel>()
                 .HasOne(p => p.Category)
