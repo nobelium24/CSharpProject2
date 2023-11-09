@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ECommerceApp.Errors;
 using ECommerceApp.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ECommerceApp.Controllers
 {
@@ -55,6 +56,8 @@ namespace ECommerceApp.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("/api/admin/login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginAdmin)
         {
             try
@@ -70,10 +73,49 @@ namespace ECommerceApp.Controllers
 
                 if (passwordVerificationResult == PasswordVerificationResult.Failed)
                     return BadRequest(new { message = "Invalid email or password" });
-                
+
                 var token = _tokenService.GenerateAdminToken(loginAdmin.Email ?? throw new IsNullException(), "Admin") ?? throw new AuthorizationException();
 
                 return Json(new { message = $"Welcome, {admin.UserName}", adminToken = token });
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("/api/admin/findstore")]
+        [Authorize(Roles = "Admin")]
+
+        public async Task<IActionResult> FindStore([FromBody] UserModel model)
+        {
+            try
+            {
+                var verify = _dbContext.Admin.Any(u => u.Email == model.Email);
+                if (!verify) throw new UserNotFoundException();
+                var store = await _dbContext.Users.FirstOrDefaultAsync(s => s.StoreName == model.StoreName) ?? throw new UserNotFoundException();
+                return Ok(store);
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("/api/admin/blacklistuser/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> BlackListUser(UserModel model)
+        {
+            try
+            {
+                var verify = _dbContext.Admin.Any(u => u.Email == model.Email);
+                if (!verify) throw new UserNotFoundException();
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == model.Id) ?? throw new UserNotFoundException();
+                user.IsScammer = true;
+                await _dbContext.SaveChangesAsync();
+                return Json(new { message = $"User {user.FirstName} has been blacklisted" });
             }
             catch (System.Exception)
             {

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerceApp.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20231027113708_UpdateProductModel")]
-    partial class UpdateProductModel
+    [Migration("20231109092420_migrationOne")]
+    partial class migrationOne
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,35 @@ namespace ECommerceApp.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ECommerceApp.Models.AdminModel", b =>
+                {
+                    b.Property<int>("CartId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CartId"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("CartId");
+
+                    b.HasAlternateKey("Email");
+
+                    b.HasAlternateKey("UserName");
+
+                    b.ToTable("Admin");
+                });
 
             modelBuilder.Entity("ECommerceApp.Models.CartModel", b =>
                 {
@@ -71,6 +100,30 @@ namespace ECommerceApp.Migrations
                     b.HasAlternateKey("CategoryName");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("ECommerceApp.Models.ForgotPasswordModel", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewPassword")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VerificationCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CategoryId");
+
+                    b.ToTable("ForgotPassword");
                 });
 
             modelBuilder.Entity("ECommerceApp.Models.ProductModel", b =>
@@ -125,6 +178,9 @@ namespace ECommerceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsScammer")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSeller")
                         .HasColumnType("bit");
 
@@ -136,9 +192,18 @@ namespace ECommerceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StoreDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StoreName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasAlternateKey("Email");
+
+                    b.HasAlternateKey("StoreName");
 
                     b.ToTable("Users");
                 });

@@ -132,22 +132,22 @@ namespace ECommerceApp.Controllers
 
         [HttpPost]
         [Route("/api/user/forgotpassword")]
-        public async Task<IActionResult> ForgotPassword([FromBody] string email)
+        public async Task<IActionResult> ForgotPassword([FromBody] UserModel userModel)
         {
             try
             {
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == userModel.Email) ?? throw new UserNotFoundException();
                 string code = _codeGenerator.VerificationCode(4);
                 var forgottenPassword = new ForgotPasswordModel()
                 {
-                    Email = email,
+                    Email = userModel.Email,
                     VerificationCode = code
                 };
                 _dbContext.ForgotPassword.Add(forgottenPassword);
                 await _dbContext.SaveChangesAsync();
                 var firstName = user.FirstName ?? throw new IsNullException();
 
-                _sendMail.SendForgotPasswordMail(email, firstName, code);
+                _sendMail.SendForgotPasswordMail(userModel.Email, firstName, code);
                 return Json(new { message = "Check your mail for verification code" });
             }
             catch (System.Exception)
@@ -175,6 +175,96 @@ namespace ECommerceApp.Controllers
                 _dbContext.ForgotPassword.Remove(verifyUser);
 
                 return Json(new { message = "Password has been reset successfully." });
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("/api/user/findstore")]
+        public async Task<IActionResult> FindStore([FromBody] UserModel model)
+        {
+            try
+            {
+                var store = await _dbContext.Users.FirstOrDefaultAsync(s => s.StoreName == model.StoreName) ?? throw new UserNotFoundException();
+                return Ok(store);
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("/api/user/addtocart")]
+        [Authorize]
+        public async Task<IActionResult> AddToCart([FromBody] ProductModel model)
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
+                var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductId == model.ProductId) ?? throw new ProductNotFoundException();
+
+                var cartItem = new CartModel()
+                {
+                    Quantity = model.ProductQuantity,
+                    UserId = verifyUser.Id,
+                    ProductId = product.ProductId
+                };
+                _dbContext.Carts.Add(cartItem);
+                await _dbContext.SaveChangesAsync();
+                return Ok("Item added to cart successfully");
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpDelete]
+        [Route("/api/user/removefromcart/{id}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveFromCart(int id)
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
+                var cartItem = await _dbContext.Carts.FirstOrDefaultAsync(c => c.CartId == id) ?? throw new ProductNotFoundException();
+                _dbContext.Carts.Remove(cartItem);
+                await _dbContext.SaveChangesAsync();
+                return Ok("Item removed from cart");
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpGet]
+        [Route("/api/user/viewcart")]
+        [Authorize]
+        public async Task<IActionResult> ViewCart()
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
+                var cartItems = await _dbContext.Carts
+                    .Where(c => c.UserId == verifyUser.Id)
+                    .Include(c => c.Product)
+                    .Select(c => new {
+                        Product = c.Product,
+                        Quantity = c.Quantity
+                    }).ToListAsync();
+                
+                return Ok(cartItems);
             }
             catch (System.Exception)
             {

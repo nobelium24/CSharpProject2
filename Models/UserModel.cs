@@ -30,11 +30,15 @@ namespace ECommerceApp.Models
 
         public bool IsSeller { get; set; }
 
-        public bool isScammer { get; set; }
+        public bool IsScammer { get; set; }
+
+        public string? StoreName { get; set; }
+
+        public string? StoreDescription { get; set; }
         public UserModel()
         {
             IsSeller = false; // This initializes the IsSeller property to false.
-            isScammer = false;
+            IsScammer = false;
             Carts = new List<CartModel>(); // This initializes the Carts property to an empty list.
         }
 

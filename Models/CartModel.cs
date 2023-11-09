@@ -15,13 +15,13 @@ namespace ECommerceApp.Models
         public int ProductId { get; set; } // This is a foreign key.
         [ForeignKey("ProductId")]
 
-        public required ProductModel Product { get; set; } // This is a navigation property.
+        public ProductModel? Product { get; set; } // This is a navigation property.
 
         public int UserId { get; set; } // This is a foreign key.
         [ForeignKey("UserId")]
 
-        public required UserModel User { get; set; } // This is a navigation property.
+        public UserModel? User { get; set; } // This is a navigation property.
 
-        
+
     }
 }

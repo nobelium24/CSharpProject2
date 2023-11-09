@@ -5,11 +5,28 @@
 namespace ECommerceApp.Migrations
 {
     /// <inheritdoc />
-    public partial class firstMigration : Migration
+    public partial class migrationOne : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Admin",
+                columns: table => new
+                {
+                    CartId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserName = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Admin", x => x.CartId);
+                    table.UniqueConstraint("AK_Admin_Email", x => x.Email);
+                    table.UniqueConstraint("AK_Admin_UserName", x => x.UserName);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Categories",
                 columns: table => new
@@ -26,6 +43,21 @@ namespace ECommerceApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ForgotPassword",
+                columns: table => new
+                {
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VerificationCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NewPassword = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ForgotPassword", x => x.CategoryId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -35,12 +67,16 @@ namespace ECommerceApp.Migrations
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsSeller = table.Column<bool>(type: "bit", nullable: false)
+                    IsSeller = table.Column<bool>(type: "bit", nullable: false),
+                    IsScammer = table.Column<bool>(type: "bit", nullable: false),
+                    StoreName = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    StoreDescription = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                     table.UniqueConstraint("AK_Users_Email", x => x.Email);
+                    table.UniqueConstraint("AK_Users_StoreName", x => x.StoreName);
                 });
 
             migrationBuilder.CreateTable(
@@ -51,8 +87,8 @@ namespace ECommerceApp.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProductName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProductDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ProductPrice = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ProductQuantity = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProductPrice = table.Column<int>(type: "int", nullable: false),
+                    ProductQuantity = table.Column<int>(type: "int", nullable: false),
                     ProductImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -111,7 +147,13 @@ namespace ECommerceApp.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Admin");
+
+            migrationBuilder.DropTable(
                 name: "Carts");
+
+            migrationBuilder.DropTable(
+                name: "ForgotPassword");
 
             migrationBuilder.DropTable(
                 name: "Products");

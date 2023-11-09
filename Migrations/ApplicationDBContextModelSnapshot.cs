@@ -175,6 +175,9 @@ namespace ECommerceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsScammer")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSeller")
                         .HasColumnType("bit");
 
@@ -186,12 +189,18 @@ namespace ECommerceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("isScammer")
-                        .HasColumnType("bit");
+                    b.Property<string>("StoreDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StoreName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasAlternateKey("Email");
+
+                    b.HasAlternateKey("StoreName");
 
                     b.ToTable("Users");
                 });

@@ -17,6 +17,9 @@ namespace ECommerceApp.Database
             modelBuilder.Entity<Models.UserModel>()
                 .HasAlternateKey(a => new { a.Email });
 
+            modelBuilder.Entity<Models.UserModel>()
+                .HasAlternateKey(u => new {u.StoreName});
+
             modelBuilder.Entity<Models.CategoryModel>()
                 .HasAlternateKey(a => new { a.CategoryName });
 

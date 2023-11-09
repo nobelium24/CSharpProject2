@@ -17,21 +17,26 @@ namespace ECommerceApp.Errors
 
     public class CategoryAlreadyExistException : Exception
     {
-        public CategoryAlreadyExistException(string category) : base($"Category {category} already exists"){}
+        public CategoryAlreadyExistException(string category) : base($"Category {category} already exists") { }
     }
 
     public class CategoryDoesNotExistException : Exception
     {
-        public CategoryDoesNotExistException() : base("Category does not exist"){}
+        public CategoryDoesNotExistException() : base("Category does not exist") { }
     }
 
-    public class IsNullException : Exception 
+    public class IsNullException : Exception
     {
-        public IsNullException() : base("Variable is null"){}
+        public IsNullException() : base("Variable is null") { }
     }
 
     public class InvalidResetPasswordCodeException : Exception
     {
-        public InvalidResetPasswordCodeException() : base("Password reset code is invalid"){}
+        public InvalidResetPasswordCodeException() : base("Password reset code is invalid") { }
+    }
+
+    public class ProductNotFoundException : Exception
+    {
+        public ProductNotFoundException() : base("User not found") { }
     }
 }

@@ -66,7 +66,7 @@ namespace ECommerceApp.Controllers
 
         [HttpGet]
         [Route("/api/product/fetchproducts", Name = "FetchProduct")]
-        public ActionResult FetchAllProducts([FromBody] ProductModel productModel)
+        public ActionResult FetchAllProducts()
         {
             try
             {
@@ -76,7 +76,7 @@ namespace ECommerceApp.Controllers
                     ProductDescription = p.ProductDescription,
                     ProductImage = p.ProductImage
                 }).ToList();
-                return Json(new { message = "Products retrieved successfully", products = products });
+                return Json(new { message = "Products retrieved successfully", products });
             }
             catch (System.Exception)
             {
@@ -86,11 +86,11 @@ namespace ECommerceApp.Controllers
 
         [HttpPost]
         [Route("/api/product/getsingleproduct", Name = "GetSingleProduct")]
-        public async Task<IActionResult> GetSingleProduct([FromBody] string productName)
+        public async Task<IActionResult> GetSingleProduct([FromBody] ProductModel model)
         {
             try
             {
-                var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductName == productName) ?? throw new IsNullException();
+                var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductName == model.ProductName) ?? throw new IsNullException();
                 return Ok(product);
             }
             catch (System.Exception)
@@ -149,16 +149,15 @@ namespace ECommerceApp.Controllers
 
         [HttpDelete]
         [Route("/api/product/deleteproduct/{id}", Name = "DeleteProduct")]
-        [Authorize(Roles = "Seller")]
+        [Authorize(Roles = "Seller, Admin")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             try
             {
                 var productModel = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductId == id) ?? throw new IsNullException();
-                if (productModel == null) return NotFound("Product does not exist");
-
                 _dbContext.Products.Remove(productModel);
-                return NoContent();
+                await _dbContext.SaveChangesAsync();
+                return Ok("Product deleted");
             }
             catch (System.Exception)
             {

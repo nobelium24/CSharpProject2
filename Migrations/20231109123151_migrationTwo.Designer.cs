@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerceApp.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20231108123726_migrationTwo")]
+    [Migration("20231109123151_migrationTwo")]
     partial class migrationTwo
     {
         /// <inheritdoc />
@@ -178,6 +178,9 @@ namespace ECommerceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsScammer")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSeller")
                         .HasColumnType("bit");
 
@@ -189,9 +192,18 @@ namespace ECommerceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StoreDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StoreName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasAlternateKey("Email");
+
+                    b.HasAlternateKey("StoreName");
 
                     b.ToTable("Users");
                 });
