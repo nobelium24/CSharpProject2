@@ -11,6 +11,7 @@ namespace ECommerceApp.Database
         public DbSet<Models.CartModel> Carts { get; set; }
         public DbSet<Models.ForgotPasswordModel> ForgotPassword { get; set; }
         public DbSet<Models.AdminModel> Admin { get; set; }
+        public DbSet<Models.OrderModel> Orders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +29,36 @@ namespace ECommerceApp.Database
 
             modelBuilder.Entity<Models.AdminModel>()
                 .HasAlternateKey(a => new { a.UserName });
+
+            modelBuilder.Entity<Models.ProductModel>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Products)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            modelBuilder.Entity<Models.OrderModel>()
+                .HasOne(o => o.User)
+                .WithMany(u => u.UserOrders)
+                .HasForeignKey(o => o.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+            
+            modelBuilder.Entity<Models.OrderModel>()
+                .HasOne(o => o.Seller)
+                .WithMany(u => u.SellerOrders)
+                .HasForeignKey(o => o.SellerId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            modelBuilder.Entity<Models.OrderModel>()
+                .HasOne(o => o.Product)
+                .WithMany(p => p.Orders)
+                .HasForeignKey(o => o.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull);  
+
+            modelBuilder.Entity<Models.OrderModel>()
+                .HasOne(o => o.Seller)
+                .WithMany()
+                .HasForeignKey(o => o.SellerId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<Models.ProductModel>()
                 .HasOne(p => p.Category)
@@ -60,6 +91,22 @@ namespace ECommerceApp.Database
             modelBuilder.Entity<Models.UserModel>()
                 .HasMany(u => u.Carts)
                 .WithOne(c => c.User)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+            
+            modelBuilder.Entity<Models.UserModel>()
+                .HasMany(u => u.UserOrders)
+                .WithOne(o => o.User)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+            
+            
+            modelBuilder.Entity<Models.UserModel>()
+                .HasMany(u => u.SellerOrders)
+                .WithOne(o => o.Seller)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            modelBuilder.Entity<Models.ProductModel>()
+                .HasMany(p => p.Orders)
+                .WithOne(o => o.Product)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
         }

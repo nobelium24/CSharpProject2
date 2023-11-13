@@ -40,9 +40,15 @@ namespace ECommerceApp.Models
             IsSeller = false; // This initializes the IsSeller property to false.
             IsScammer = false;
             Carts = new List<CartModel>(); // This initializes the Carts property to an empty list.
+            UserOrders = new List<OrderModel>();
+            SellerOrders = new List<OrderModel>();
+            Products = new List<ProductModel>();
         }
 
         public List<CartModel> Carts { get; set; }
+        public ICollection<OrderModel> UserOrders { get; set; }
+        public ICollection<OrderModel> SellerOrders { get; set; }
+        public List<ProductModel> Products { get; set; }
 
 
         //For error validation messages. The method below is used to get the validation errors for the model. It returns a dictionary with the property name as the key and the error message as the value.

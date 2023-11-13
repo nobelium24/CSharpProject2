@@ -40,7 +40,7 @@ namespace ECommerceApp.Controllers
                 _dbContext.Categories.Add(category);
                 await _dbContext.SaveChangesAsync();
 
-                return Json(new { message = "Category created successfully" });
+                return StatusCode(201, new { message = "Category created successfully" });
             }
             catch (Exception)
             {
@@ -55,7 +55,7 @@ namespace ECommerceApp.Controllers
             try
             {
                 var catrgories = _dbContext.Categories.ToList();
-                return Json(catrgories);
+                return StatusCode(200, catrgories);
             }
             catch (System.Exception)
             {
@@ -71,7 +71,7 @@ namespace ECommerceApp.Controllers
             {
                 CategoryModel category = _dbContext.Categories.SingleOrDefault(c => c.CategoryId == categoryId) ?? throw new CategoryDoesNotExistException();
 
-                return Json(category);
+                return StatusCode(200, category);
             }
             catch (Exception)
             {
@@ -87,7 +87,7 @@ namespace ECommerceApp.Controllers
             {
                 CategoryModel category = _dbContext.Categories.SingleOrDefault(c => c.CategoryName == categoryName) ?? throw new CategoryDoesNotExistException();
 
-                return Json(category);
+                return StatusCode(200, category);
             }
             catch (Exception)
             {
@@ -104,7 +104,7 @@ namespace ECommerceApp.Controllers
                 CategoryModel category = _dbContext.Categories.SingleOrDefault(c => c.CategoryId == id) ?? throw new CategoryDoesNotExistException();
                 _dbContext.Categories.Remove(category);
                 await _dbContext.SaveChangesAsync();
-                return Json(new { message = "Category deleted successfully" });
+                return StatusCode(200, new { message = "Category deleted successfully" });
             }
             catch (System.Exception)
             {
@@ -123,7 +123,7 @@ namespace ECommerceApp.Controllers
 
                 patchDocument.ApplyTo(categoryModel);
                 await _dbContext.SaveChangesAsync();
-                return Json(new {message = "Category updated successfully"});
+                return StatusCode(200, new {message = "Category updated successfully"});
             }
             catch (Exception)
             {

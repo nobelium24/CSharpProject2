@@ -55,7 +55,7 @@ namespace ECommerceApp.Controllers
                 _dbContext.Products.Add(product);
                 await _dbContext.SaveChangesAsync();
 
-                return Json(new { message = "Product created successfully" });
+                return StatusCode(201, new { message = "Product created successfully" });
 
             }
             catch (System.Exception)
@@ -76,7 +76,7 @@ namespace ECommerceApp.Controllers
                     ProductDescription = p.ProductDescription,
                     ProductImage = p.ProductImage
                 }).ToList();
-                return Json(new { message = "Products retrieved successfully", products });
+                return StatusCode(200, new { message = "Products retrieved successfully", products });
             }
             catch (System.Exception)
             {
@@ -139,7 +139,7 @@ namespace ECommerceApp.Controllers
                 _dbContext.Entry(productModel).CurrentValues.SetValues(updatedProduct);
                 await _dbContext.SaveChangesAsync();
 
-                return Json(new { message = "Product updated successfully" });
+                return StatusCode(200, new { message = "Product updated successfully" });
             }
             catch (System.Exception)
             {

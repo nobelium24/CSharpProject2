@@ -16,6 +16,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpClient();
+
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 
@@ -68,6 +70,7 @@ builder.Services.AddScoped<ErrorHandlerMiddleware>();
 builder.Services.AddScoped<SendMail>();
 
 builder.Services.AddScoped<CodeGenerator>();
+
 
 
 var app = builder.Build();

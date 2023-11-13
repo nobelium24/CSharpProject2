@@ -47,7 +47,7 @@ namespace ECommerceApp.Controllers
 
                 _sendMail.SendEmail(adminModel.Email ?? throw new IsNullException(), adminModel.UserName ?? throw new IsNullException());
 
-                return Json(new { message = "User created successfully" });
+                return StatusCode(201, new { message = "User created successfully" });
 
             }
             catch (System.Exception)
@@ -76,7 +76,7 @@ namespace ECommerceApp.Controllers
 
                 var token = _tokenService.GenerateAdminToken(loginAdmin.Email ?? throw new IsNullException(), "Admin") ?? throw new AuthorizationException();
 
-                return Json(new { message = $"Welcome, {admin.UserName}", adminToken = token });
+                return StatusCode(200, new { message = $"Welcome, {admin.UserName}", adminToken = token });
             }
             catch (System.Exception)
             {
@@ -115,7 +115,7 @@ namespace ECommerceApp.Controllers
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == model.Id) ?? throw new UserNotFoundException();
                 user.IsScammer = true;
                 await _dbContext.SaveChangesAsync();
-                return Json(new { message = $"User {user.FirstName} has been blacklisted" });
+                return StatusCode(200, new { message = $"User {user.FirstName} has been blacklisted" });
             }
             catch (System.Exception)
             {

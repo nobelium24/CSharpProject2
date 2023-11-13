@@ -16,5 +16,17 @@ namespace ECommerceApp.Utilities
             }
             return token.ToString();
         }
+
+        public string ReferenceGenerator(){
+            byte[] tokenData = new byte[10];
+            RandomNumberGenerator.Fill(tokenData);
+            
+            StringBuilder token = new StringBuilder(10 * 2);
+            foreach(byte b in tokenData)
+            {
+                token.AppendFormat("{0:x2}", b);
+            }
+            return token.ToString();
+        }
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using System;
 using System.Security.Claims;
 
@@ -24,12 +25,15 @@ namespace ECommerceApp.Controllers
         private readonly SendMail _sendMail;
 
         private readonly CodeGenerator _codeGenerator;
-        public UserController(ApplicationDBContext dbContext, TokenService tokenService, SendMail sendMail, CodeGenerator codeGenerator)
+
+        private readonly IHttpClientFactory _clientFactory;
+        public UserController(ApplicationDBContext dbContext, TokenService tokenService, SendMail sendMail, CodeGenerator codeGenerator, IHttpClientFactory clientFactory)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext)); // This is a null check.
             _tokenService = tokenService;
             _sendMail = sendMail;
             _codeGenerator = codeGenerator;
+            _clientFactory = clientFactory;
         }
 
         [HttpPost]
@@ -60,7 +64,7 @@ namespace ECommerceApp.Controllers
 
                 _sendMail.SendEmail(userModel.Email, userModel.FirstName ?? throw new IsNullException());
 
-                return Json(new { message = "User created successfully" });
+                return StatusCode(201, new { message = "User created successfully" });
             }
             catch (Exception)
             {
@@ -98,7 +102,7 @@ namespace ECommerceApp.Controllers
                 if (token == "")
                     throw new AuthorizationException();
 
-                return Json(new { message = $"Welcome, {user.FirstName}", userToken = token });
+                return StatusCode(200, new { message = $"Welcome, {user.FirstName}", userToken = token });
             }
             catch (Exception)
             {
@@ -148,7 +152,7 @@ namespace ECommerceApp.Controllers
                 var firstName = user.FirstName ?? throw new IsNullException();
 
                 _sendMail.SendForgotPasswordMail(userModel.Email, firstName, code);
-                return Json(new { message = "Check your mail for verification code" });
+                return StatusCode(200, new { message = "Check your mail for verification code" });
             }
             catch (System.Exception)
             {
@@ -174,7 +178,7 @@ namespace ECommerceApp.Controllers
 
                 _dbContext.ForgotPassword.Remove(verifyUser);
 
-                return Json(new { message = "Password has been reset successfully." });
+                return StatusCode(200, new { message = "Password has been reset successfully." });
             }
             catch (System.Exception)
             {
@@ -259,12 +263,63 @@ namespace ECommerceApp.Controllers
                 var cartItems = await _dbContext.Carts
                     .Where(c => c.UserId == verifyUser.Id)
                     .Include(c => c.Product)
-                    .Select(c => new {
+                    .Select(c => new
+                    {
                         Product = c.Product,
                         Quantity = c.Quantity
                     }).ToListAsync();
-                
+
                 return Ok(cartItems);
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("/api/user/checkout")]
+        [Authorize]
+        public async Task<IActionResult> CheckOut([FromBody] VerifyPaymentModel model)
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+                var client = _clientFactory.CreateClient();
+                var response = await client.GetAsync($"https://api.paystack.co/transaction/verify/{model.Reference}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    return StatusCode(400, new { message = "Invalid payment" });
+                }
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var responseObject = JsonConvert.DeserializeObject<Root>(jsonString) ?? throw new IsNullException();
+                var data = responseObject.data ?? throw new IsNullException();
+                if (data?.status != "success" && data?.amount != model.TotalAmount)
+                {
+                    return StatusCode(400, new { message = "Invalid payment" });
+                }
+
+                var cartItems = await _dbContext.Carts.Where(c => c.UserId == verifyUser.Id).ToListAsync() ;
+                foreach (var item in cartItems)
+                {
+                    var order = new OrderModel()
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UserId = verifyUser.Id,
+                        SellerId = item.Product.UserId ,
+                        Status = Status.Pending,
+                        Reference = _codeGenerator.ReferenceGenerator(),
+                    };
+                    _dbContext.Orders.Add(order);
+                    _dbContext.Carts.Remove(item);
+                    await _dbContext.SaveChangesAsync();
+                }
+                return Ok("Payment successful");
+
+                
+
             }
             catch (System.Exception)
             {
@@ -275,4 +330,3 @@ namespace ECommerceApp.Controllers
 
 
 }
-

@@ -26,10 +26,17 @@ namespace ECommerceApp.Models
 
         public int CategoryId { get; set; } // This is a foreign key.
 
+        public int UserId { get; set; } // This is a foreign key.
+
         [ForeignKey("CategoryId")]
         public CategoryModel ? Category { get; set; } // This is a navigation property.
 
         public List<CartModel> ? Carts { get; set; }
+
+        public List<OrderModel> ? Orders { get; set; }
+
+        [ForeignKey("UserId")]
+        public UserModel ? User { get; set; } // This is a navigation property.
 
     }
 }
