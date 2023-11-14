@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using ECommerceApp.Errors;
 using ECommerceApp.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace ECommerceApp.Controllers
 {
@@ -103,16 +104,18 @@ namespace ECommerceApp.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route("/api/admin/blacklistuser/{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> BlackListUser(UserModel model)
+        public async Task<IActionResult> BlackListUser(int id)
         {
             try
             {
-                var verify = _dbContext.Admin.Any(u => u.Email == model.Email);
+                var email = User.FindFirstValue(ClaimTypes.Email) ?? throw new UserNotFoundException();
+                var verify = _dbContext.Admin.Any(u => u.Email == email);
                 if (!verify) throw new UserNotFoundException();
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == model.Id) ?? throw new UserNotFoundException();
+
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id) ?? throw new UserNotFoundException();
                 user.IsScammer = true;
                 await _dbContext.SaveChangesAsync();
                 return StatusCode(200, new { message = $"User {user.FirstName} has been blacklisted" });

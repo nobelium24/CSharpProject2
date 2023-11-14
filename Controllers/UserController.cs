@@ -209,6 +209,9 @@ namespace ECommerceApp.Controllers
             try
             {
                 var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
                 var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
 
                 var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductId == model.ProductId) ?? throw new ProductNotFoundException();
@@ -237,6 +240,9 @@ namespace ECommerceApp.Controllers
             try
             {
                 var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
                 var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
 
                 var cartItem = await _dbContext.Carts.FirstOrDefaultAsync(c => c.CartId == id) ?? throw new ProductNotFoundException();
@@ -258,6 +264,9 @@ namespace ECommerceApp.Controllers
             try
             {
                 var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
                 var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
 
                 var cartItems = await _dbContext.Carts
@@ -285,6 +294,9 @@ namespace ECommerceApp.Controllers
             try
             {
                 var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
                 var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
                 var client = _clientFactory.CreateClient();
                 var response = await client.GetAsync($"https://api.paystack.co/transaction/verify/{model.Reference}");
@@ -300,7 +312,7 @@ namespace ECommerceApp.Controllers
                     return StatusCode(400, new { message = "Invalid payment" });
                 }
 
-                var cartItems = await _dbContext.Carts.Where(c => c.UserId == verifyUser.Id).ToListAsync() ;
+                var cartItems = await _dbContext.Carts.Where(c => c.UserId == verifyUser.Id).ToListAsync();
                 foreach (var item in cartItems)
                 {
                     var order = new OrderModel()
@@ -308,7 +320,7 @@ namespace ECommerceApp.Controllers
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
                         UserId = verifyUser.Id,
-                        SellerId = item.Product.UserId ,
+                        SellerId = item.Product.UserId,
                         Status = Status.Pending,
                         Reference = _codeGenerator.ReferenceGenerator(),
                     };
@@ -318,7 +330,7 @@ namespace ECommerceApp.Controllers
                 }
                 return Ok("Payment successful");
 
-                
+
 
             }
             catch (System.Exception)
