@@ -10,15 +10,21 @@ namespace ECommerceApp.Models
         public int ProductId { get; set; }
 
         [Required(ErrorMessage = "ProductName is required")]
+        [RegularExpression(@"^[A-Za-z0-9]+$", ErrorMessage = "ProductName can only contain letters and numbers")]
+        [StringLength(50, ErrorMessage = "ProductName cannot be longer than 50 characters")]
         public string ? ProductName { get; set; }
 
         [Required(ErrorMessage = "ProductDescription is required")]
+        [RegularExpression(@"^[A-Za-z0-9]+$", ErrorMessage = "ProductDescription can only contain letters and numbers")]
+        [StringLength(500, ErrorMessage = "ProductDescription cannot be longer than 500 characters")]
         public string ? ProductDescription { get; set; }
 
         [Required(ErrorMessage = "ProductPrice is required")]
+        [Range(0, 1000000, ErrorMessage = "ProductPrice must be between 0 and 1000000")]
         public int ProductPrice { get; set; }
 
         [Required(ErrorMessage = "ProductQuantity is required")]
+        [Range(0, 1000000, ErrorMessage = "ProductQuantity must be between 0 and 1000000")]
         public int ProductQuantity { get; set; }
 
         [Required(ErrorMessage = "ProductImage is required")]
