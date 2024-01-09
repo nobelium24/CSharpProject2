@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.JsonPatch;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using CloudinaryDotNet.Actions;
 // using ECommerceApp.Services;
 
 namespace ECommerceApp.Controllers
@@ -39,7 +40,14 @@ namespace ECommerceApp.Controllers
                     return BadRequest(ModelState);
 
                 // var cloudinaryService = new CloudinaryService(_appCloudinaryConfiguration);
-                var imageUrl = await _cloudinaryService.UploadBase64Media(productModel.ProductImage ?? throw new IsNullException());
+                // var imageUrl = await _cloudinaryService.UploadBase64Media(productModel.ProductImage ?? throw new IsNullException());
+                List<ImageModel> imageUrls = new();
+                foreach (var image in productModel.Images ?? throw new IsNullException())
+                {
+                    var imageUrl = await _cloudinaryService.UploadBase64Media(image.ImageUrl ?? throw new IsNullException());
+                    imageUrls.Add(imageUrl);
+                }
+
 
                 var product = new ProductModel
                 {
@@ -47,13 +55,27 @@ namespace ECommerceApp.Controllers
                     ProductDescription = productModel.ProductDescription,
                     ProductPrice = productModel.ProductPrice,
                     ProductQuantity = productModel.ProductQuantity,
-                    ProductImage = imageUrl,
+                    // ProductImage = imageUrl,
                     CategoryId = productModel.CategoryId,
                     // Category = await _dbContext.Categories.FirstAsync(c => c.CategoryId == productModel.CategoryId)
                 };
 
                 _dbContext.Products.Add(product);
                 await _dbContext.SaveChangesAsync();
+
+                int productId = product.ProductId;
+
+                foreach (var imageUrl in imageUrls)
+                {
+                    var image = new ImageModel
+                    {
+                        ImageUrl = imageUrl.ImageUrl,
+                        ProductId = productId,
+                        PublicId = imageUrl.PublicId
+                    };
+                    _dbContext.Images.Add(image);
+                    await _dbContext.SaveChangesAsync();
+                }
 
                 return StatusCode(201, new { message = "Product created successfully" });
 
@@ -70,11 +92,18 @@ namespace ECommerceApp.Controllers
         {
             try
             {
-                var products = _dbContext.Products.Select(p => new ProductModel
+                var products = _dbContext.Products
+                .Include(p => p.Images)
+                .Select(p => new ProductModel
                 {
                     ProductName = p.ProductName,
                     ProductDescription = p.ProductDescription,
-                    ProductImage = p.ProductImage
+                    // ProductImage = p.ProductImage
+                    Images = p.Images.Select(i => new ImageModel
+                    {
+                        ImageUrl = i.ImageUrl,
+                        ProductId = i.ProductId
+                    }).Where(i => i != null).ToList()
                 }).ToList();
                 return StatusCode(200, new { message = "Products retrieved successfully", products });
             }
@@ -90,7 +119,9 @@ namespace ECommerceApp.Controllers
         {
             try
             {
-                var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductName == model.ProductName) ?? throw new IsNullException();
+                var product = await _dbContext.Products
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.ProductName == model.ProductName) ?? throw new IsNullException();
                 return Ok(product);
             }
             catch (System.Exception)
@@ -105,7 +136,9 @@ namespace ECommerceApp.Controllers
         {
             try
             {
-                var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductId == id) ?? throw new IsNullException();
+                var product = await _dbContext.Products
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.ProductId == id) ?? throw new IsNullException();
                 return Ok(product);
             }
             catch (System.Exception)
@@ -121,7 +154,9 @@ namespace ECommerceApp.Controllers
         {
             try
             {
-                ProductModel productModel = _dbContext.Products.SingleOrDefault(c => c.CategoryId == id) ?? throw new IsNullException();
+                ProductModel productModel = _dbContext.Products
+                .SingleOrDefault(c => c.CategoryId == id) ?? throw new IsNullException();
+
                 if (productModel == null) return NotFound("Id does not exist");
 
                 var updateProduct = new ProductModel
@@ -130,7 +165,7 @@ namespace ECommerceApp.Controllers
                     ProductName = productModel.ProductName,
                     ProductDescription = productModel.ProductDescription,
                     ProductPrice = productModel.ProductPrice,
-                    ProductImage = productModel.ProductImage,
+                    // ProductImage = productModel.ProductImage,
                     ProductQuantity = productModel.ProductQuantity
                 };
 
@@ -154,7 +189,22 @@ namespace ECommerceApp.Controllers
         {
             try
             {
-                var productModel = await _dbContext.Products.FirstOrDefaultAsync(p => p.ProductId == id) ?? throw new IsNullException();
+                var imageModel = await _dbContext.Images
+                .Where(i => i.ProductId == id)
+                .ToListAsync() ?? throw new IsNullException();
+
+                foreach (var image in imageModel)
+                {
+                    var deleteParams = new DeletionParams(image.PublicId);
+                    var deletionResult = await _cloudinaryService
+                    .DeleteMedia(deleteParams.PublicId ?? throw new IsNullException());
+                    if(deletionResult != "ok") throw new ImageDeleteException();
+                    _dbContext.Images.Remove(image);
+                }
+
+                var productModel = await _dbContext.Products
+                .FirstOrDefaultAsync(p => p.ProductId == id) ?? throw new IsNullException();
+
                 _dbContext.Products.Remove(productModel);
                 await _dbContext.SaveChangesAsync();
                 return Ok("Product deleted");

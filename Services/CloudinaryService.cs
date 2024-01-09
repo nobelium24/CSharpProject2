@@ -2,6 +2,7 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using ECommerceApp.Configuration;
+using ECommerceApp.Models;
 
 namespace ECommerceApp.Services
 {
@@ -20,7 +21,7 @@ namespace ECommerceApp.Services
             _cloudinary = new Cloudinary(account);
         }
 
-        public async Task<string> UploadBase64Media(string base64Media)
+        public async Task<ImageModel> UploadBase64Media(string base64Media)
         {
             try
             {
@@ -31,7 +32,25 @@ namespace ECommerceApp.Services
                     Folder = "my_folder"
                 };
                 var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                return uploadResult.SecureUrl.AbsoluteUri;
+                return new ImageModel
+                {
+                    ImageUrl = uploadResult.SecureUrl.AbsoluteUri,
+                    PublicId = uploadResult.PublicId
+                };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<string> DeleteMedia(string publicId)
+        {
+            try
+            {
+                var deleteParams = new DeletionParams(publicId);
+                var deletionResult = await _cloudinary.DestroyAsync(deleteParams);
+                return deletionResult.Result;
             }
             catch (Exception)
             {

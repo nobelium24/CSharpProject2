@@ -49,12 +49,15 @@ namespace ECommerceApp.Controllers
                 if (verifyUser)
                     throw new UserAlreadyExistException(userModel.Email);
 
+                var IpAddress = HttpContext.Connection.RemoteIpAddress ?? throw new NullIpAddressException();
+
                 var user = new UserModel()
                 {
                     FirstName = userModel.FirstName,
                     LastName = userModel.LastName,
                     Email = userModel.Email,
                     Password = userModel.Password,
+                    IpAddress = IpAddress.ToString(),
                 };
 
                 var hashedPassword = new PasswordHasher<UserModel>().HashPassword(user, user.Password);

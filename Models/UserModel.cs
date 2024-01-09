@@ -28,6 +28,8 @@ namespace ECommerceApp.Models
         [RegularExpression(@"^[A-Za-z0-9]+$", ErrorMessage = "Password can only contain letters and numbers")]
         public required string Password { get; set; }
 
+        public string? IpAddress { get; set; }
+
         public bool IsSeller { get; set; }
 
         public bool IsScammer { get; set; }

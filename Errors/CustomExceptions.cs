@@ -39,4 +39,14 @@ namespace ECommerceApp.Errors
     {
         public ProductNotFoundException() : base("User not found") { }
     }
+
+    public class NullIpAddressException: Exception
+    {
+        public NullIpAddressException() : base("IpAddress is not valid"){}
+    }
+
+    public class ImageDeleteException : Exception
+    {
+        public ImageDeleteException() : base("Image could not be deleted") { }
+    }
 }

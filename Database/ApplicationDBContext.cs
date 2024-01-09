@@ -12,6 +12,7 @@ namespace ECommerceApp.Database
         public DbSet<Models.ForgotPasswordModel> ForgotPassword { get; set; }
         public DbSet<Models.AdminModel> Admin { get; set; }
         public DbSet<Models.OrderModel> Orders { get; set; }
+        public DbSet<Models.ImageModel> Images { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +30,12 @@ namespace ECommerceApp.Database
 
             modelBuilder.Entity<Models.AdminModel>()
                 .HasAlternateKey(a => new { a.UserName });
+
+            modelBuilder.Entity<Models.ImageModel>()
+                .HasOne(p => p.Product)
+                .WithMany(i => i.Images)
+                .HasForeignKey(p => p.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<Models.ProductModel>()
                 .HasOne(p => p.User)
@@ -76,6 +83,11 @@ namespace ECommerceApp.Database
                 .HasOne(c => c.User)
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            modelBuilder.Entity<Models.ProductModel>()
+                .HasMany(p => p.Images)
+                .WithOne(i => i.Product)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<Models.CategoryModel>()

@@ -27,9 +27,6 @@ namespace ECommerceApp.Models
         [Range(0, 1000000, ErrorMessage = "ProductQuantity must be between 0 and 1000000")]
         public int ProductQuantity { get; set; }
 
-        [Required(ErrorMessage = "ProductImage is required")]
-        public string ? ProductImage  { get; set; }
-
         public int CategoryId { get; set; } // This is a foreign key.
 
         public int UserId { get; set; } // This is a foreign key.
@@ -37,9 +34,11 @@ namespace ECommerceApp.Models
         [ForeignKey("CategoryId")]
         public CategoryModel ? Category { get; set; } // This is a navigation property.
 
-        public List<CartModel> ? Carts { get; set; }
+        public ICollection<ImageModel> ? Images { get; set; }
 
-        public List<OrderModel> ? Orders { get; set; }
+        public ICollection<CartModel> ? Carts { get; set; }
+
+        public ICollection<OrderModel> ? Orders { get; set; }
 
         [ForeignKey("UserId")]
         public UserModel ? User { get; set; } // This is a navigation property.
