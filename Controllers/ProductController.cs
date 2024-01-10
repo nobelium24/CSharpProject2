@@ -13,6 +13,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using CloudinaryDotNet.Actions;
 // using ECommerceApp.Services;
+using System.Security.Claims;
 
 namespace ECommerceApp.Controllers
 {
@@ -36,6 +37,13 @@ namespace ECommerceApp.Controllers
         {
             try
             {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
+                var verifyUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
@@ -154,6 +162,16 @@ namespace ECommerceApp.Controllers
         {
             try
             {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
+                var verifyUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
                 ProductModel productModel = _dbContext.Products
                 .SingleOrDefault(c => c.CategoryId == id) ?? throw new IsNullException();
 
@@ -189,6 +207,15 @@ namespace ECommerceApp.Controllers
         {
             try
             {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
+                var verifyUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
                 var imageModel = await _dbContext.Images
                 .Where(i => i.ProductId == id)
                 .ToListAsync() ?? throw new IsNullException();
@@ -198,7 +225,7 @@ namespace ECommerceApp.Controllers
                     var deleteParams = new DeletionParams(image.PublicId);
                     var deletionResult = await _cloudinaryService
                     .DeleteMedia(deleteParams.PublicId ?? throw new IsNullException());
-                    if(deletionResult != "ok") throw new ImageDeleteException();
+                    if (deletionResult != "ok") throw new ImageDeleteException();
                     _dbContext.Images.Remove(image);
                 }
 
@@ -208,6 +235,56 @@ namespace ECommerceApp.Controllers
                 _dbContext.Products.Remove(productModel);
                 await _dbContext.SaveChangesAsync();
                 return Ok("Product deleted");
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPut]
+        [Route("/api/product/editproductimage/{productid}", Name = "EditProductImage")]
+        [Authorize(Roles = "Seller")]
+        public async Task<IActionResult> EditProductImage(int productid, [FromBody] List<ImageModel> imageModel)
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
+                var verifyUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+                List<ImageModel> images = await _dbContext.Images
+                .Where(p => p.ProductId == productid)
+                .ToListAsync() ?? throw new IsNullException();
+
+                foreach (var image in images)
+                {
+                    var deleteParams = new DeletionParams(image.PublicId);
+                    var deletionResult = await _cloudinaryService
+                    .DeleteMedia(deleteParams.PublicId ?? throw new IsNullException());
+                    if (deletionResult != "ok") throw new ImageDeleteException();
+                    _dbContext.Images.Remove(image);
+                }
+
+                foreach (var image in imageModel)
+                {
+                    var imageUrl = await _cloudinaryService.UploadBase64Media(image.ImageUrl ?? throw new IsNullException());
+                    var newImage = new ImageModel
+                    {
+                        ImageUrl = imageUrl.ImageUrl,
+                        ProductId = productid,
+                        PublicId = imageUrl.PublicId
+                    };
+                    _dbContext.Images.Add(newImage);
+                    await _dbContext.SaveChangesAsync();
+                }
+
+                return StatusCode(200, new { message = "Product image updated successfully" });
             }
             catch (System.Exception)
             {

@@ -7,7 +7,7 @@ namespace ECommerceApp.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int CartId { get; set; }
+        public int Id { get; set; }
 
         [Required(ErrorMessage = "Username is required")]
         [RegularExpression(@"^[A-Za-z0-9]+$", ErrorMessage = "Username can only contain letters and numbers")]

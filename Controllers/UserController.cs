@@ -49,7 +49,7 @@ namespace ECommerceApp.Controllers
                 if (verifyUser)
                     throw new UserAlreadyExistException(userModel.Email);
 
-                var IpAddress = HttpContext.Connection.RemoteIpAddress ?? throw new NullIpAddressException();
+                // var IpAddress = HttpContext.Connection.RemoteIpAddress ?? throw new NullIpAddressException();
 
                 var user = new UserModel()
                 {
@@ -57,7 +57,10 @@ namespace ECommerceApp.Controllers
                     LastName = userModel.LastName,
                     Email = userModel.Email,
                     Password = userModel.Password,
-                    IpAddress = IpAddress.ToString(),
+                    // IpAddress = IpAddress.ToString(),
+                    City = userModel.City,
+                    State = userModel.State,
+                    Country = userModel.Country
                 };
 
                 var hashedPassword = new PasswordHasher<UserModel>().HashPassword(user, user.Password);
@@ -270,16 +273,14 @@ namespace ECommerceApp.Controllers
                 if (string.IsNullOrEmpty(email))
                     return Unauthorized("No email claims found in token");
 
-                var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+                var verifyUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
 
                 var cartItems = await _dbContext.Carts
-                    .Where(c => c.UserId == verifyUser.Id)
-                    .Include(c => c.Product)
-                    .Select(c => new
-                    {
-                        Product = c.Product,
-                        Quantity = c.Quantity
-                    }).ToListAsync();
+                .Where(c => c.UserId == verifyUser.Id)
+                .Include(c => c.Product)
+                .ThenInclude(p => p.Images)
+                .ToListAsync();
 
                 return Ok(cartItems);
             }
@@ -335,6 +336,28 @@ namespace ECommerceApp.Controllers
 
 
 
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpGet]
+        [Route("/api/user/getproductsbycity")]
+        [Authorize]
+        public async Task<IActionResult> getProductsByCity()
+        {
+            try
+            {
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized("No email claims found in token");
+
+                var verifyUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new UserNotFoundException();
+
+                var products = await _dbContext.Products.Where(p => p.User.City == verifyUser.City).ToListAsync();
+                return Ok(products);
             }
             catch (System.Exception)
             {

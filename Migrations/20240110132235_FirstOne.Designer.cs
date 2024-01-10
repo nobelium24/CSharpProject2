@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerceApp.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20231113122957_anotherOne2")]
-    partial class anotherOne2
+    [Migration("20240110132235_FirstOne")]
+    partial class FirstOne
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,11 +26,11 @@ namespace ECommerceApp.Migrations
 
             modelBuilder.Entity("ECommerceApp.Models.AdminModel", b =>
                 {
-                    b.Property<int>("CartId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CartId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -44,7 +44,7 @@ namespace ECommerceApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("CartId");
+                    b.HasKey("Id");
 
                     b.HasAlternateKey("Email");
 
@@ -89,11 +89,13 @@ namespace ECommerceApp.Migrations
 
                     b.Property<string>("CategoryDescription")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("CategoryName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("CategoryId");
 
@@ -126,6 +128,30 @@ namespace ECommerceApp.Migrations
                     b.ToTable("ForgotPassword");
                 });
 
+            modelBuilder.Entity("ECommerceApp.Models.ImageModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PublicId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("Images");
+                });
+
             modelBuilder.Entity("ECommerceApp.Models.OrderModel", b =>
                 {
                     b.Property<int>("Id")
@@ -139,6 +165,9 @@ namespace ECommerceApp.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SellerId")
                         .HasColumnType("int");
@@ -173,15 +202,13 @@ namespace ECommerceApp.Migrations
 
                     b.Property<string>("ProductDescription")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ProductImage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("ProductPrice")
                         .HasColumnType("int");
@@ -189,9 +216,14 @@ namespace ECommerceApp.Migrations
                     b.Property<int>("ProductQuantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("ProductId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Products");
                 });
@@ -203,6 +235,12 @@ namespace ECommerceApp.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -224,6 +262,9 @@ namespace ECommerceApp.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("State")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StoreDescription")
@@ -259,6 +300,16 @@ namespace ECommerceApp.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ECommerceApp.Models.ImageModel", b =>
+                {
+                    b.HasOne("ECommerceApp.Models.ProductModel", "Product")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ECommerceApp.Models.OrderModel", b =>
                 {
                     b.HasOne("ECommerceApp.Models.ProductModel", "Product")
@@ -290,7 +341,14 @@ namespace ECommerceApp.Migrations
                         .HasForeignKey("CategoryId")
                         .IsRequired();
 
+                    b.HasOne("ECommerceApp.Models.UserModel", "User")
+                        .WithMany("Products")
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+
                     b.Navigation("Category");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ECommerceApp.Models.CategoryModel", b =>
@@ -302,12 +360,16 @@ namespace ECommerceApp.Migrations
                 {
                     b.Navigation("Carts");
 
+                    b.Navigation("Images");
+
                     b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("ECommerceApp.Models.UserModel", b =>
                 {
                     b.Navigation("Carts");
+
+                    b.Navigation("Products");
 
                     b.Navigation("SellerOrders");
 
