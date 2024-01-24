@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using ECommerceApp.Errors;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace ECommerceApp.Controllers
@@ -20,10 +23,18 @@ namespace ECommerceApp.Controllers
 
         [HttpPost]
         [Route("/api/category/createcategory", Name = "CreateCategory")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddNewCategory([FromBody] CategoryModel categoryModel)
         {
             try
             {
+                var admin = User.FindFirst(ClaimTypes.Email)?.Value;
+                if(string.IsNullOrEmpty(admin))
+                    return Unauthorized("No email claims found in token");
+
+                var verifyAdmin = await _dbContext.Admin
+                .FirstOrDefaultAsync(u => u.Email == admin) ?? throw new UserNotFoundException();
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
@@ -97,10 +108,18 @@ namespace ECommerceApp.Controllers
 
         [HttpDelete]
         [Route("/api/category/deletecategory{id}", Name = "DeleteCategory")]
+        [Authorize (Roles = "Admin")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             try
             {
+                var admin = User.FindFirst(ClaimTypes.Email)?.Value;
+                if(string.IsNullOrEmpty(admin))
+                    return Unauthorized("No valid email claims in token");
+                
+                var verifyAdmin = await _dbContext.Admin
+                .FirstOrDefaultAsync(a => a.Email == admin) ?? throw new UserNotFoundException();
+
                 CategoryModel category = _dbContext.Categories.SingleOrDefault(c => c.CategoryId == id) ?? throw new CategoryDoesNotExistException();
                 _dbContext.Categories.Remove(category);
                 await _dbContext.SaveChangesAsync();
@@ -114,11 +133,19 @@ namespace ECommerceApp.Controllers
 
         [HttpPatch]
         [Route("/api/category/updatecategory/{id}", Name = "UpdateCategory")]
+        [Authorize(Roles = "Admin")]
         //install JsonPatch dotnet add package Microsoft.AspNetCore.JsonPatch --version 8.0.0-rc.2.23480.2
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] JsonPatchDocument<CategoryModel> patchDocument)
         {
             try
             {
+                var admin = User.FindFirst(ClaimTypes.Email)?.Value;
+                if(string.IsNullOrEmpty(admin))
+                    return Unauthorized("No valid email claims in token");
+
+                var verifyAdmin = await _dbContext.Admin 
+                .FirstOrDefaultAsync(a => a.Email == admin) ?? throw new UserNotFoundException();
+
                 CategoryModel categoryModel = _dbContext.Categories.SingleOrDefault(c => c.CategoryId == id) ?? throw new CategoryDoesNotExistException();
 
                 patchDocument.ApplyTo(categoryModel);
