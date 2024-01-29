@@ -1,50 +1,51 @@
 using System.Text.Json;
 using ECommerceApp.Errors;
 
-class ErrorHandlerMiddleware : IMiddleware
-{
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+// namespace ECommerceApp.Middlewares
+// {
+    class ErrorHandlerMiddleware : IMiddleware
     {
-        try
+        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            await next(context);
-        }
-        catch (UserNotFoundException exception)
-        {
-            var errorResponse = new ErrorResponse
+            try
             {
-                Message = exception.Message,
-                ErrorCode = "USER_NOT_FOUND",
-                ErrorDescription = "The requested user was not found"
-            };
-
-            context.Response.StatusCode = 400;
-            context.Response.ContentType = "application/json";
-
-            var serializer = JsonSerializer.Serialize(errorResponse);
-            await context.Response.WriteAsync(serializer);
-
-            var logger = context.RequestServices.GetService<ILogger<ErrorHandlerMiddleware>>();
-            logger?.LogError(exception, "An error occured while processing the request");
-        }
-        catch (Exception exception)
-        {
-            var errorResponse = new ErrorResponse
+                await next(context);
+            }
+            catch (UserNotFoundException exception)
             {
-                Message = exception.Message,
-                StackTrace = exception.StackTrace
-            };
+                var errorResponse = new ErrorResponse
+                {
+                    Message = exception.Message,
+                    ErrorCode = "USER_NOT_FOUND",
+                    ErrorDescription = "The requested user was not found"
+                };
 
-            context.Response.StatusCode = 500;
-            context.Response.ContentType = "application/json";
+                context.Response.StatusCode = 400;
+                context.Response.ContentType = "application/json";
 
-            var serializer = JsonSerializer.Serialize(errorResponse);
-            await context.Response.WriteAsync(serializer);
+                var serializer = JsonSerializer.Serialize(errorResponse);
+                await context.Response.WriteAsync(serializer);
 
-            var logger = context.RequestServices.GetService<ILogger<ErrorHandlerMiddleware>>();
-            logger?.LogError(exception, "An error occured while processing the request");
+                var logger = context.RequestServices.GetService<ILogger<ErrorHandlerMiddleware>>();
+                logger?.LogError(exception, "An error occured while processing the request");
+            }
+            catch (Exception exception)
+            {
+                var errorResponse = new ErrorResponse
+                {
+                    Message = exception.Message,
+                    StackTrace = exception.StackTrace
+                };
+
+                context.Response.StatusCode = 500;
+                context.Response.ContentType = "application/json";
+
+                var serializer = JsonSerializer.Serialize(errorResponse);
+                await context.Response.WriteAsync(serializer);
+
+                var logger = context.RequestServices.GetService<ILogger<ErrorHandlerMiddleware>>();
+                logger?.LogError(exception, "An error occured while processing the request");
+            }
         }
     }
-}
-
-
+// }

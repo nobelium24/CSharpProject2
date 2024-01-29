@@ -125,5 +125,27 @@ namespace ECommerceApp.Controllers
                 throw;
             }
         }
+
+        [HttpGet]
+        [Route("/api/admin/unblacklistuser/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UnBlacklistUser(int id)
+        {
+            try
+            {
+                var email = User.FindFirstValue(ClaimTypes.Email) ?? throw new UserNotFoundException();
+                var verifyAdmin = _dbContext.Admin.Any(u => u.Email == email);
+                if (!verifyAdmin) throw new UserNotFoundException();
+
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id) ?? throw new UserNotFoundException();
+                user.IsScammer = false;
+                await _dbContext.SaveChangesAsync();
+                return StatusCode(200, new{message = $"User {user.FirstName} has been un blacklisted"});
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
     }
 }

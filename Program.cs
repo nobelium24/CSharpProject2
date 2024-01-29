@@ -90,6 +90,8 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.UseWebSockets();
+
 
 IConfiguration configuration = app.Configuration;
 
@@ -98,5 +100,6 @@ IWebHostEnvironment environment = app.Environment;
 app.MapControllers();
 
 app.UseMiddleware<ErrorHandlerMiddleware>();
+app.UseMiddleware<WebSocketMiddleware>();
 
 app.Run();
